@@ -1,35 +1,18 @@
 package main
 
-import "time"
+import (
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
+)
 
 type Todo struct {
-	Title       string
-	Completed   bool
-	CreatedAt   time.Time
-	CompletedAt *time.Time
+	gorm.Model
+	Title     string
+	Completed bool
 }
 
-type Todos []Todo
-
-func (todos *Todos) add(title string) {
-	todo := Todo{
-		Title:       title,
-		Completed:   false,
-		CompletedAt: nil,
-		CreatedAt:   time.Now(),
-	}
-
-	*todos = append(*todos, todo)
-}
-
-func (todos *Todos) delete(index int) error {
-	t := *todos
-
-	if err := t.validateIndex(index); err != nil {
-
-	}
-}
+var db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{})
 
 func main() {
-
+	db.AutoMigrate(&Todo{})
 }
