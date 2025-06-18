@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Google Font: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- TailwindCSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind config: enable dark mode via class, set font family
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* Smooth transitions for colors */
+    html {
+      transition: color 0.2s, background-color 0.2s;
+    }
+    /* Hide default marker for details summary */
+    details summary {
+      list-style: none;
+    }
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans">
+
+  <!-- Theme toggle script -->
+  <script>
+    (function() {
+      const htmlEl = document.documentElement;
+      const themeToggleBtn = () => document.getElementById('theme-toggle');
+
+      function applyStoredTheme() {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          htmlEl.classList.add('dark');
+        } else {
+          htmlEl.classList.remove('dark');
+        }
+      }
+
+      function initThemeToggle() {
+        const btn = themeToggleBtn();
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          if (htmlEl.classList.contains('dark')) {
+            htmlEl.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          } else {
+            htmlEl.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          }
+        });
+      }
+
+      applyStoredTheme();
+      window.addEventListener('DOMContentLoaded', initThemeToggle);
+    })();
+  </script>
+
+  <div class="min-h-screen flex flex-col items-center px-4 py-10">
+    <!-- Container -->
+    <div class="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/20 p-8 transition-colors">
+      
+      <!-- Header with title and theme toggle -->
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="text-4xl font-semibold text-gray-800 dark:text-gray-100 tracking-tight">Todo Manager</h1>
+        <button id="theme-toggle" aria-label="Toggle Dark Mode"
+          class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+          <!-- Sun icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+          </svg>
+          <!-- Moon icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-200 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Add Todo Form -->
+      <form action="/add" method="POST" class="flex flex-col sm:flex-row gap-4 mb-8">
+        <input
+          name="title"
+          required
+          placeholder="What do you need to do?"
+          class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        >
+        <select
+          name="priority"
+          class="border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        >
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+        <button
+          type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition shadow-sm"
+        >Add</button>
+      </form>
+
+      <!-- Todos List as Cards -->
+      <div class="space-y-4">
+        {{range .}}
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-xl shadow-sm dark:shadow-black/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between transition hover:shadow-md dark:hover:shadow-black/20 relative">
+          
+          <!-- Left: status + title + priority badge -->
+          <div class="flex items-center space-x-4 mb-4 sm:mb-0">
+            <!-- Status button styled clearly -->
+            <form action="/toggle" method="POST" class="flex-shrink-0">
+              <input type="hidden" name="id" value="{{.ID}}">
+              <button type="submit"
+                class="text-sm font-semibold rounded-full px-4 py-1
+                       {{if .Completed}}
+                         bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600
+                       {{else}}
+                         bg-yellow-500 text-white hover:bg-yellow-600 dark:bg-yellow-400 dark:hover:bg-yellow-500
+                       {{end}}
+                       focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 transition"
+              >
+                {{if .Completed}}Completed{{else}}Pending{{end}}
+              </button>
+            </form>
+
+            <!-- Title -->
+            <span class="text-lg font-medium text-gray-800 dark:text-gray-100">{{.Title}}</span>
+
+            <!-- Priority badge -->
+            <span class="inline-block text-xs font-semibold rounded-full px-2 py-1
+                         {{if eq .Priority "High"}}bg-red-100 text-red-800 dark:bg-red-200/20 dark:text-red-300
+                         {{else if eq .Priority "Medium"}}bg-indigo-100 text-indigo-800 dark:bg-indigo-200/20 dark:text-indigo-300
+                         {{else}}bg-green-100 text-green-800 dark:bg-green-200/20 dark:text-green-300{{end}}
+                         transition"
+            >
+              {{.Priority}}
+            </span>
+          </div>
+
+          <!-- Right: Edit dropdown and Delete -->
+          <div class="flex items-center gap-4">
+            <!-- Edit dropdown using details, styled as button -->
+            <details class="relative">
+              <summary
+                class="cursor-pointer bg-blue-600 text-white text-sm font-medium rounded-md px-3 py-1 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 transition"
+              >
+                Edit
+              </summary>
+              <form action="/edit" method="POST"
+                    class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-black/20 p-4 z-10 transition"
+              >
+                <input type="hidden" name="id" value="{{.ID}}">
+                <label class="block text-sm text-gray-700 dark:text-gray-200 mb-1">Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value="{{.Title}}"
+                  class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 mb-3 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  required
+                >
+                <label class="block text-sm text-gray-700 dark:text-gray-200 mb-1">Priority</label>
+                <select name="priority"
+                  class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 mb-3 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                >
+                  <option {{if eq .Priority "Low"}}selected{{end}}>Low</option>
+                  <option {{if eq .Priority "Medium"}}selected{{end}}>Medium</option>
+                  <option {{if eq .Priority "High"}}selected{{end}}>High</option>
+                </select>
+                <div class="flex justify-end gap-2">
+                  <button type="button"
+                          class="px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition"
+                          onclick="this.closest('details').removeAttribute('open')"
+                  >Cancel</button>
+                  <button type="submit"
+                          class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 transition"
+                  >Save</button>
+                </div>
+              </form>
+            </details>
+
+            <!-- Delete button styled clearly -->
+            <form action="/delete" method="POST" class="flex-shrink-0">
+              <input type="hidden" name="id" value="{{.ID}}">
+              <button type="submit"
+                class="bg-red-600 text-white text-sm font-medium rounded-md px-3 py-1 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500 transition"
+                onclick="return confirm('Delete this todo?');"
+              >Delete</button>
+            </form>
+          </div>
+
+        </div>
+        {{end}}
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
